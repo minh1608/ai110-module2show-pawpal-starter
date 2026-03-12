@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import date
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
@@ -35,7 +36,9 @@ This demo lets you:
 st.divider()
 
 st.subheader("Owner and Pet Info")
-owner_name = st.text_input("Owner name", value="Jordan")
+owner_name = st.text_input("Owner name", value="Minh")
+
+st.markdown("### Add a Pet")
 pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
 age = st.number_input("Pet age", min_value=0, max_value=40, value=2)
@@ -46,22 +49,49 @@ if "owner" not in st.session_state:
 else:
     st.session_state.owner.name = owner_name
 
-# Keep Pet in session memory
-if "pet" not in st.session_state:
-    st.session_state.pet = Pet(
-        pet_id=1,
-        name=pet_name,
-        species=species,
-        age=int(age),
+if "pet_counter" not in st.session_state:
+    st.session_state.pet_counter = 1
+
+if st.button("Add pet"):
+    existing_names = [pet.name for pet in st.session_state.owner.pets]
+    if not pet_name.strip():
+        st.error("Please enter a pet name.")
+    elif pet_name in existing_names:
+        st.warning("A pet with this name already exists.")
+    else:
+        new_pet = Pet(
+            pet_id=st.session_state.pet_counter,
+            name=pet_name,
+            species=species,
+            age=int(age),
+        )
+        st.session_state.owner.add_pet(new_pet)
+        st.session_state.pet_counter += 1
+        st.success(f"Added pet: {pet_name}")
+        st.rerun()
+
+if st.session_state.owner.pets:
+    pet_names = [pet.name for pet in st.session_state.owner.pets]
+    selected_pet_name = st.selectbox("Select pet for tasks", pet_names)
+
+    selected_pet = next(
+        pet for pet in st.session_state.owner.pets if pet.name == selected_pet_name
     )
-    st.session_state.owner.add_pet(st.session_state.pet)
+
+    st.caption(
+        f"Selected pet: {selected_pet.name} ({selected_pet.species}, age {selected_pet.age})"
+    )
 else:
-    st.session_state.pet.name = pet_name
-    st.session_state.pet.species = species
-    st.session_state.pet.age = int(age)
+    selected_pet = None
+    st.info("No pets added yet. Add a pet first.")
+
+# Keep Owner in session memory
+if "owner" not in st.session_state:
+    st.session_state.owner = Owner(owner_id=1, name=owner_name)
+else:
+    st.session_state.owner.name = owner_name
 
 st.write("Owner object in session:", st.session_state.owner)
-st.write("Pet object in session:", st.session_state.pet)
 
 if "schedule_rows" not in st.session_state:
     st.session_state.schedule_rows = []
@@ -99,21 +129,25 @@ if "task_counter" not in st.session_state:
     st.session_state.task_counter = 1
 
 if st.button("Add task"):
-    task = Task(
-        task_id=st.session_state.task_counter,
-        pet=st.session_state.pet,
-        task_type=task_title,
-        duration=int(duration),
-        priority=priority_map[priority_label],
-        due_time=due_time,
-        frequency=frequency,
-    )
-    st.session_state.owner.add_task(task)
-    st.session_state.task_counter += 1
-    st.success(f"Added task: {task_title}")
-    st.rerun()
+    if selected_pet is None:
+        st.error("Please add a pet before adding tasks.")
+    else:
+        task = Task(
+            task_id=st.session_state.task_counter,
+            pet=selected_pet,
+            task_type=task_title,
+            duration=int(duration),
+            priority=priority_map[priority_label],
+            due_date=date.today(),
+            due_time=due_time,
+            frequency=frequency,
+        )
+        st.session_state.owner.add_task(task)
+        st.session_state.task_counter += 1
+        st.success(f"Added task: {task_title} for {selected_pet.name}")
+        st.rerun()
 
-current_tasks = st.session_state.pet.get_tasks()
+current_tasks = st.session_state.owner.get_all_tasks()
 
 if current_tasks:
     st.write("Current tasks:")
@@ -129,14 +163,15 @@ if current_tasks:
 
         with col2:
             if st.button("❌", key=f"delete_{task.task_id}"):
-                st.session_state.pet.tasks.pop(index)
+                task.pet.tasks = [pet_task for pet_task in task.pet.tasks if pet_task.task_id != task.task_id]
                 st.session_state.schedule_rows = []
                 st.session_state.plan_explanations = []
                 st.session_state.conflict_rows = []
                 st.rerun()
 
     if st.button("Clear all tasks"):
-        st.session_state.pet.tasks = []
+        for pet in st.session_state.owner.pets:
+            pet.tasks = []
         st.session_state.schedule_rows = []
         st.session_state.plan_explanations = []
         st.session_state.conflict_rows = []
@@ -199,6 +234,7 @@ if st.button("Generate schedule"):
         st.success("Schedule generated successfully.")
         if st.session_state.schedule_rows:
             st.markdown("### Today's Schedule")
+            st.caption("Tasks are automatically sorted by priority and due time.")
             st.table(st.session_state.schedule_rows)
 
             st.markdown("### Why this plan was chosen")
@@ -207,7 +243,7 @@ if st.button("Generate schedule"):
 
             if st.session_state.conflict_rows:
                 st.markdown("### Scheduling Conflicts")
-                st.warning("Some tasks share the same due time.")
+                st.warning("⚠️ Scheduling conflict detected. Multiple tasks are scheduled at the same time.")
                 st.table(st.session_state.conflict_rows)
             else:
                 st.info("No scheduling conflicts detected.")

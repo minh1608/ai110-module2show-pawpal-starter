@@ -1,3 +1,9 @@
+## 📸 Demo
+
+Below is an example of the PawPal+ scheduling interface.
+
+![PawPal Demo](pawpal_demo.png)
+
 # PawPal+ (Module 2 Project)
 
 You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
@@ -53,6 +59,27 @@ PawPal+ now includes several simple algorithms to help organize pet care tasks:
 
 These features help the system produce a more useful and intelligent daily care plan for the pet owner.
 
+## Features
+
+PawPal+ includes several intelligent scheduling features designed to help pet owners manage daily care tasks effectively:
+
+- **Task Sorting by Time**  
+  Tasks can be automatically sorted by due date and time to create a clear chronological schedule.
+
+- **Priority-Based Planning**  
+  Higher priority tasks appear earlier in the generated daily plan.
+
+- **Task Filtering**  
+  Tasks can be filtered by pet name or completion status to focus on specific care responsibilities.
+
+- **Recurring Tasks**  
+  When a task with a frequency of "daily" or "weekly" is completed, the system automatically creates the next occurrence.
+
+- **Conflict Detection**  
+  The scheduler detects tasks scheduled at the same date and time and provides warning messages.
+
+These features make the PawPal+ system more intelligent and helpful for organizing pet care routines.
+
 ## Testing PawPal+
 
 You can run the automated tests with:
@@ -68,6 +95,6 @@ The current test suite verifies core behaviors in the PawPal+ system, including:
 	•	recurring task creation
 	•	conflict detection
 
-Confidence Level: ★★★★☆ (4/5)
+**Confidence Level:** ★★★★☆ (4/5)
 
 I am confident that the core scheduling logic works correctly for the main happy paths and key edge cases covered by the tests. If I had more time, I would add more tests for empty schedules, overlapping durations, and weekly recurrence edge cases.
