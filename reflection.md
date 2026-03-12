@@ -19,13 +19,11 @@ After reviewing the skeleton, I decided to keep the Owner class focused on manag
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+My scheduler currently considers three main constraints: task priority, due time, and completion status. Priority determines which tasks should appear earlier in the schedule, while due time helps organize tasks chronologically within the same priority level. The scheduler also tracks whether a task has already been completed so that only incomplete tasks are considered when generating a plan. I decided that priority and due time mattered most because pet care tasks often have different levels of urgency. For example, feeding or medication may be more urgent than enrichment activities, so higher-priority tasks should appear earlier in the schedule.
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+One tradeoff my scheduler makes is that conflict detection only checks for exact matching task times instead of overlapping durations. For example, it can detect two tasks scheduled at 08:00, but it would not detect a conflict between a task at 08:00 for 30 minutes and another task at 08:15 for 20 minutes. I decided this tradeoff was reasonable for this version of PawPal+ because it keeps the algorithm simple, readable, and easy to verify in a beginner-friendly project. If I had more time, I would improve it by comparing time ranges instead of exact matches only.
 
 ---
 

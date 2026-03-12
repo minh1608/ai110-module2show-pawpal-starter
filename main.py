@@ -1,3 +1,4 @@
+from datetime import date
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 
@@ -27,7 +28,9 @@ def main():
         task_type="Morning Walk",
         duration=30,
         priority=3,
+        due_date=date.today(),
         due_time="08:00",
+        frequency="daily",
     )
 
     task2 = Task(
@@ -36,7 +39,9 @@ def main():
         task_type="Feed Breakfast",
         duration=10,
         priority=5,
-        due_time="07:30",
+        due_date=date.today(),
+        due_time="08:00",
+        frequency="once",
     )
 
     task3 = Task(
@@ -45,7 +50,9 @@ def main():
         task_type="Medication",
         duration=5,
         priority=4,
+        due_date=date.today(),
         due_time="09:00",
+        frequency="weekly",
     )
 
     owner.add_task(task1)
@@ -57,6 +64,55 @@ def main():
 
     print_schedule(daily_plan)
 
+    print("\nSorted Tasks by Time")
+    print("=" * 40)
+    sorted_tasks = scheduler.sort_tasks_by_time()
+    for task in sorted_tasks:
+        print(f"{task.due_time} | {task.pet.name:<10} | {task.task_type}")
+
+    print("\nFiltered Tasks for Pet: Milo")
+    print("=" * 40)
+    milo_tasks = scheduler.filter_tasks_by_pet("Milo")
+    for task in milo_tasks:
+        print(f"{task.due_time} | {task.pet.name:<10} | {task.task_type}")
+
+    print("\nIncomplete Tasks")
+    print("=" * 40)
+    pending_tasks = scheduler.filter_tasks_by_status(False)
+    for task in pending_tasks:
+        print(f"{task.due_time} | {task.pet.name:<10} | {task.task_type}")
+
+    print("\nConflict Warnings")
+    print("=" * 40)
+
+    conflict_warnings = scheduler.get_conflict_warnings()
+
+    if conflict_warnings:
+        for warning in conflict_warnings:
+            print(warning)
+    else:
+        print("No conflicts detected.")
+
+    print("\nRecurring Task Test")
+    print("=" * 40)
+
+    new_daily_task = scheduler.mark_task_complete(1)
+    new_weekly_task = scheduler.mark_task_complete(3)
+
+    print("Task 1 completed:", task1.completed)
+    print("Task 3 completed:", task3.completed)
+
+    if new_daily_task:
+        print(
+            f"New daily task created: {new_daily_task.task_type} | "
+            f"{new_daily_task.due_date} | {new_daily_task.due_time}"
+        )
+
+    if new_weekly_task:
+        print(
+            f"New weekly task created: {new_weekly_task.task_type} | "
+            f"{new_weekly_task.due_date} | {new_weekly_task.due_time}"
+        )
 
 if __name__ == "__main__":
     main()
