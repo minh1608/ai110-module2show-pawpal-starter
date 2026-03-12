@@ -4,7 +4,6 @@
 
 The three main actions in PawPal+ are adding pet and owner information, creating pet care tasks, and generating a daily care plan. The user needs a way to store basic pet details so the system can organize care around the correct pet. The user also needs to add tasks like feeding, walking, medication, and grooming with enough detail for scheduling. Finally, the app should generate a daily plan that helps the owner decide what to do first and why.
 
-
 **a. Initial design**
 
 My initial UML design used four main classes: Owner, Pet, Task, and Scheduler. Owner is responsible for storing the owner’s identity and managing the pets in the system. Pet stores basic pet information such as name, species, and age, and keeps a list of care tasks for that pet. Task represents a single care activity, such as feeding, walking, or medication, and stores details like duration, priority, due time, and completion status. Scheduler is responsible for organizing tasks, sorting them by priority, generating a daily plan, and detecting scheduling conflicts.
@@ -31,13 +30,15 @@ One tradeoff my scheduler makes is that conflict detection only checks for exact
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+During this project, I used AI tools mainly for brainstorming design ideas, debugging errors, and reviewing my code structure. AI was helpful for suggesting improvements to the scheduling logic, identifying potential edge cases, and explaining why certain errors occurred. I also used AI to help generate test ideas and to review whether my implementation matched the intended system design.
+
+The most helpful prompts were questions that focused on understanding the system behavior, such as asking why a scheduling result appeared incorrect or how to structure classes so that responsibilities were clearly separated. These kinds of prompts helped me reason about the system rather than just copying generated code.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+One moment where I did not accept an AI suggestion as-is occurred when implementing multi-pet support in the Streamlit interface. An early suggestion reused a single pet object stored in session state, which caused tasks from different pets to overwrite each other and appear under the wrong pet in the schedule. Instead of using that approach, I redesigned the logic so that the Owner class stores a list of Pet objects, and the interface allows the user to select which pet a task belongs to.
+
+To verify AI suggestions, I relied on testing the program directly. I ran the application, created multiple pets and tasks, and checked whether the schedule displayed the correct pet names and task order. If the system behavior did not match expectations, I adjusted the implementation until the output was correct.
 
 ---
 
@@ -45,13 +46,15 @@ One tradeoff my scheduler makes is that conflict detection only checks for exact
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+I wrote automated tests using pytest to verify several important behaviors of the system. These tests checked that tasks are stored correctly, that tasks are sorted chronologically, that recurring tasks are created properly when a task is completed, and that the scheduler can detect conflicts when two tasks share the same due time. I also tested filtering functions that return tasks for a specific pet.
+
+These tests were important because the scheduler logic is the core of the application. If sorting, recurrence, or conflict detection fails, the generated schedule would be unreliable for the user.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+Based on the test results and manual testing in the Streamlit interface, I am reasonably confident that the scheduler works correctly for the main use cases of the application. The automated tests confirm that the key algorithms behave as expected.
+
+If I had more time, I would add additional tests for edge cases such as pets with no tasks, tasks with identical priorities and times, and scenarios involving overlapping task durations. I would also test more complex recurrence patterns to ensure they behave consistently over time.
 
 ---
 
@@ -59,12 +62,12 @@ One tradeoff my scheduler makes is that conflict detection only checks for exact
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+The part of this project I am most satisfied with is the separation between the scheduling logic and the user interface. By placing all scheduling algorithms inside the Scheduler class, the system remains organized and easier to test. This structure also made it easier to connect the logic to the Streamlit interface later without rewriting the core logic.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+If I were to continue developing this project, I would improve the scheduling algorithm to detect overlapping time ranges instead of only identical timestamps. I would also expand the UI so users could edit or reschedule tasks directly from the interface. Another improvement would be allowing the scheduler to consider the owner’s available time and automatically distribute tasks more intelligently throughout the day.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+One important lesson from this project is that AI tools are most effective when used as assistants rather than decision-makers. AI can help generate ideas and suggest solutions, but the developer still needs to evaluate those suggestions carefully and ensure they fit the system design. Acting as the system architect and verifying results through testing is essential when collaborating with AI tools in software development.
