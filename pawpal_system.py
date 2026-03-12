@@ -11,10 +11,12 @@ class Pet:
     tasks: List["Task"] = field(default_factory=list)
 
     def add_task(self, task: "Task") -> None:
-        pass
+        """Add a task to this pet."""
+        self.tasks.append(task)
 
     def get_tasks(self) -> List["Task"]:
-        pass
+        """Return all tasks for this pet."""
+        return self.tasks
 
 
 @dataclass
@@ -25,13 +27,16 @@ class Task:
     duration: int
     priority: int
     due_time: str
+    frequency: str = "daily"
     completed: bool = False
 
     def mark_complete(self) -> None:
-        pass
+        """Mark this task as completed."""
+        self.completed = True
 
     def reschedule(self, new_time: str) -> None:
-        pass
+        """Update the task due time."""
+        self.due_time = new_time
 
 
 class Owner:
@@ -41,13 +46,19 @@ class Owner:
         self.pets: List[Pet] = []
 
     def add_pet(self, pet: Pet) -> None:
-        pass
+        """Add a pet to this owner."""
+        self.pets.append(pet)
 
     def add_task(self, task: Task) -> None:
-        pass
+        """Add a task to the task's assigned pet."""
+        task.pet.add_task(task)
 
     def get_all_tasks(self) -> List[Task]:
-        pass
+        """Return all tasks across all pets."""
+        all_tasks: List[Task] = []
+        for pet in self.pets:
+            all_tasks.extend(pet.get_tasks())
+        return all_tasks
 
 
 class Scheduler:
@@ -55,10 +66,24 @@ class Scheduler:
         self.tasks: List[Task] = tasks if tasks is not None else []
 
     def sort_tasks_by_priority(self) -> List[Task]:
-        pass
+        """Return tasks sorted by priority and due time."""
+        return sorted(self.tasks, key=lambda task: (-task.priority, task.due_time))
 
     def generate_daily_plan(self) -> List[Task]:
-        pass
+        """Generate a daily plan from the current task list."""
+        return self.sort_tasks_by_priority()
 
     def detect_conflicts(self) -> List[Task]:
-        pass
+        """Return tasks that share the same due time."""
+        conflicts: List[Task] = []
+        seen_times = {}
+
+        for task in self.tasks:
+            if task.due_time in seen_times:
+                conflicts.append(task)
+                if seen_times[task.due_time] not in conflicts:
+                    conflicts.append(seen_times[task.due_time])
+            else:
+                seen_times[task.due_time] = task
+
+        return conflicts
