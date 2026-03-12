@@ -1,12 +1,12 @@
+# PawPal+ (Module 2 Project)
+
+You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+
 ## 📸 Demo
 
 Below is an example of the PawPal+ scheduling interface.
 
 ![PawPal Demo](pawpal_demo.png)
-
-# PawPal+ (Module 2 Project)
-
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
 
 ## Scenario
 
@@ -79,6 +79,15 @@ PawPal+ includes several intelligent scheduling features designed to help pet ow
   The scheduler detects tasks scheduled at the same date and time and provides warning messages.
 
 These features make the PawPal+ system more intelligent and helpful for organizing pet care routines.
+
+## Data Persistence
+
+PawPal+ now saves pets and tasks between runs using a JSON file.
+
+All owner, pet, and task data are automatically stored in `data.json`.  
+When the app starts, it loads this file so previously added pets and tasks remain available.
+
+This persistence layer allows the system to behave more like a real application rather than a temporary demo session.
 
 ## Testing PawPal+
 
