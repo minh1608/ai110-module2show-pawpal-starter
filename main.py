@@ -114,5 +114,18 @@ def main():
             f"{new_weekly_task.due_date} | {new_weekly_task.due_time}"
         )
 
+    print("\nPersistence Test")
+    print("=" * 40)
+
+    owner.save_to_json("data.json")
+    loaded_owner = Owner.load_from_json("data.json")
+
+    if loaded_owner is not None:
+        print(f"Loaded owner: {loaded_owner.name}")
+        print(f"Loaded pets: {[pet.name for pet in loaded_owner.pets]}")
+        print(f"Loaded total tasks: {len(loaded_owner.get_all_tasks())}")
+    else:
+        print("Failed to load data from JSON.")
+
 if __name__ == "__main__":
     main()

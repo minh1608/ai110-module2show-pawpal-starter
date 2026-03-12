@@ -1,0 +1,60 @@
+{
+  "owner_id": 1,
+  "name": "Minh",
+  "pets": [
+    {
+      "pet_id": 1,
+      "name": "Mochi",
+      "species": "dog",
+      "age": 2,
+      "tasks": [
+        {
+          "task_id": 1,
+          "task_type": "Morning walk",
+          "duration": 20,
+          "priority": 3,
+          "due_date": "2026-03-12",
+          "due_time": "08:00",
+          "frequency": "daily",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "pet_id": 2,
+      "name": "Milo",
+      "species": "cat",
+      "age": 2,
+      "tasks": [
+        {
+          "task_id": 2,
+          "task_type": "Morning walk",
+          "duration": 20,
+          "priority": 3,
+          "due_date": "2026-03-12",
+          "due_time": "08:00",
+          "frequency": "daily",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "pet_id": 3,
+      "name": "Luna",
+      "species": "dog",
+      "age": 5,
+      "tasks": [
+        {
+          "task_id": 3,
+          "task_type": "Morning walk",
+          "duration": 20,
+          "priority": 3,
+          "due_date": "2026-03-12",
+          "due_time": "08:00",
+          "frequency": "daily",
+          "completed": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
+import json
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from pathlib import Path
 from typing import List, Optional
 
 
@@ -18,6 +20,32 @@ class Pet:
     def get_tasks(self) -> List["Task"]:
         """Return all tasks for this pet."""
         return self.tasks
+
+    def to_dict(self) -> dict:
+        """Convert this pet and its tasks to a dictionary."""
+        return {
+            "pet_id": self.pet_id,
+            "name": self.name,
+            "species": self.species,
+            "age": self.age,
+            "tasks": [task.to_dict() for task in self.tasks],
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Pet":
+        """Create a Pet object from a dictionary."""
+        pet = Pet(
+            pet_id=data["pet_id"],
+            name=data["name"],
+            species=data["species"],
+            age=data["age"],
+        )
+
+        for task_data in data.get("tasks", []):
+            task = Task.from_dict(task_data, pet)
+            pet.add_task(task)
+
+        return pet
 
 
 @dataclass
@@ -40,6 +68,34 @@ class Task:
         """Update the task due time."""
         self.due_time = new_time
 
+    def to_dict(self) -> dict:
+        """Convert this task to a dictionary."""
+        return {
+            "task_id": self.task_id,
+            "task_type": self.task_type,
+            "duration": self.duration,
+            "priority": self.priority,
+            "due_date": self.due_date.isoformat(),
+            "due_time": self.due_time,
+            "frequency": self.frequency,
+            "completed": self.completed,
+        }
+
+    @staticmethod
+    def from_dict(data: dict, pet: Pet) -> "Task":
+        """Create a Task object from a dictionary and linked pet."""
+        return Task(
+            task_id=data["task_id"],
+            pet=pet,
+            task_type=data["task_type"],
+            duration=data["duration"],
+            priority=data["priority"],
+            due_date=date.fromisoformat(data["due_date"]),
+            due_time=data["due_time"],
+            frequency=data.get("frequency", "daily"),
+            completed=data.get("completed", False),
+        )
+
 
 class Owner:
     def __init__(self, owner_id: int, name: str):
@@ -61,6 +117,40 @@ class Owner:
         for pet in self.pets:
             all_tasks.extend(pet.get_tasks())
         return all_tasks
+
+    def to_dict(self) -> dict:
+        """Convert this owner and all pets to a dictionary."""
+        return {
+            "owner_id": self.owner_id,
+            "name": self.name,
+            "pets": [pet.to_dict() for pet in self.pets],
+        }
+
+    def save_to_json(self, filename: str = "data.json") -> None:
+        """Save owner, pets, and tasks to a JSON file."""
+        with open(filename, "w", encoding="utf-8") as file:
+            json.dump(self.to_dict(), file, indent=2)
+
+    @staticmethod
+    def load_from_json(filename: str = "data.json") -> Optional["Owner"]:
+        """Load owner, pets, and tasks from a JSON file."""
+        path = Path(filename)
+        if not path.exists():
+            return None
+
+        with open(filename, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        owner = Owner(
+            owner_id=data["owner_id"],
+            name=data["name"],
+        )
+
+        for pet_data in data.get("pets", []):
+            pet = Pet.from_dict(pet_data)
+            owner.add_pet(pet)
+
+        return owner
 
 
 class Scheduler:
@@ -108,6 +198,7 @@ class Scheduler:
                 )
 
                 self.tasks.append(new_task)
+                task.pet.add_task(new_task)
                 return new_task
 
         return None

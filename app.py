@@ -2,6 +2,15 @@ import streamlit as st
 from datetime import date
 from pawpal_system import Owner, Pet, Task, Scheduler
 
+DATA_FILE = "data.json"
+
+
+def save_owner_data() -> None:
+    """Persist the current owner state to JSON."""
+    if "owner" in st.session_state:
+        st.session_state.owner.save_to_json(DATA_FILE)
+
+
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
 st.title("🐾 PawPal+")
@@ -36,24 +45,55 @@ This demo lets you:
 st.divider()
 
 st.subheader("Owner and Pet Info")
-owner_name = st.text_input("Owner name", value="Minh")
+
+# Load owner from JSON on startup
+if "owner" not in st.session_state:
+    loaded_owner = Owner.load_from_json(DATA_FILE)
+    if loaded_owner is not None:
+        st.session_state.owner = loaded_owner
+    else:
+        st.session_state.owner = Owner(owner_id=1, name="Minh")
+
+# Initialize counters from loaded data
+if "pet_counter" not in st.session_state:
+    if st.session_state.owner.pets:
+        st.session_state.pet_counter = max(
+            pet.pet_id for pet in st.session_state.owner.pets
+        ) + 1
+    else:
+        st.session_state.pet_counter = 1
+
+if "task_counter" not in st.session_state:
+    all_existing_tasks = st.session_state.owner.get_all_tasks()
+    if all_existing_tasks:
+        st.session_state.task_counter = max(
+            task.task_id for task in all_existing_tasks
+        ) + 1
+    else:
+        st.session_state.task_counter = 1
+
+# Persistent UI state for rendered schedule
+if "schedule_rows" not in st.session_state:
+    st.session_state.schedule_rows = []
+
+if "plan_explanations" not in st.session_state:
+    st.session_state.plan_explanations = []
+
+if "conflict_rows" not in st.session_state:
+    st.session_state.conflict_rows = []
+
+owner_name = st.text_input("Owner name", value=st.session_state.owner.name)
+st.session_state.owner.name = owner_name
+save_owner_data()
 
 st.markdown("### Add a Pet")
 pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
 age = st.number_input("Pet age", min_value=0, max_value=40, value=2)
 
-# Keep Owner in session memory
-if "owner" not in st.session_state:
-    st.session_state.owner = Owner(owner_id=1, name=owner_name)
-else:
-    st.session_state.owner.name = owner_name
-
-if "pet_counter" not in st.session_state:
-    st.session_state.pet_counter = 1
-
 if st.button("Add pet"):
     existing_names = [pet.name for pet in st.session_state.owner.pets]
+
     if not pet_name.strip():
         st.error("Please enter a pet name.")
     elif pet_name in existing_names:
@@ -67,6 +107,7 @@ if st.button("Add pet"):
         )
         st.session_state.owner.add_pet(new_pet)
         st.session_state.pet_counter += 1
+        save_owner_data()
         st.success(f"Added pet: {pet_name}")
         st.rerun()
 
@@ -84,23 +125,6 @@ if st.session_state.owner.pets:
 else:
     selected_pet = None
     st.info("No pets added yet. Add a pet first.")
-
-# Keep Owner in session memory
-if "owner" not in st.session_state:
-    st.session_state.owner = Owner(owner_id=1, name=owner_name)
-else:
-    st.session_state.owner.name = owner_name
-
-st.write("Owner object in session:", st.session_state.owner)
-
-if "schedule_rows" not in st.session_state:
-    st.session_state.schedule_rows = []
-
-if "plan_explanations" not in st.session_state:
-    st.session_state.plan_explanations = []
-
-if "conflict_rows" not in st.session_state:
-    st.session_state.conflict_rows = []
 
 st.markdown("### Tasks")
 st.caption("Add a few tasks, then generate a daily schedule.")
@@ -125,12 +149,11 @@ priority_map = {
     "high": 3,
 }
 
-if "task_counter" not in st.session_state:
-    st.session_state.task_counter = 1
-
 if st.button("Add task"):
     if selected_pet is None:
         st.error("Please add a pet before adding tasks.")
+    elif not task_title.strip():
+        st.error("Please enter a task title.")
     else:
         task = Task(
             task_id=st.session_state.task_counter,
@@ -144,6 +167,7 @@ if st.button("Add task"):
         )
         st.session_state.owner.add_task(task)
         st.session_state.task_counter += 1
+        save_owner_data()
         st.success(f"Added task: {task_title} for {selected_pet.name}")
         st.rerun()
 
@@ -157,13 +181,18 @@ if current_tasks:
 
         with col1:
             st.write(
-                f"{task.task_type} | {task.duration} min | "
+                f"{task.task_type} | {task.pet.name} | {task.duration} min | "
                 f"Priority {task.priority} | {task.due_time} | {task.frequency}"
             )
 
         with col2:
-            if st.button("❌", key=f"delete_{task.task_id}"):
-                task.pet.tasks = [pet_task for pet_task in task.pet.tasks if pet_task.task_id != task.task_id]
+            if st.button("❌", key=f"delete_{task.task_id}_{index}_{task.pet.name}"):
+                task.pet.tasks = [
+                    pet_task
+                    for pet_task in task.pet.tasks
+                    if pet_task.task_id != task.task_id
+                ]
+                save_owner_data()
                 st.session_state.schedule_rows = []
                 st.session_state.plan_explanations = []
                 st.session_state.conflict_rows = []
@@ -172,6 +201,7 @@ if current_tasks:
     if st.button("Clear all tasks"):
         for pet in st.session_state.owner.pets:
             pet.tasks = []
+        save_owner_data()
         st.session_state.schedule_rows = []
         st.session_state.plan_explanations = []
         st.session_state.conflict_rows = []
@@ -187,8 +217,10 @@ st.caption("Generate a schedule using your backend PawPal system.")
 if st.button("Generate schedule"):
     all_tasks = st.session_state.owner.get_all_tasks()
 
-    if not owner_name.strip() or not pet_name.strip():
-        st.error("Please enter both owner and pet information.")
+    if not owner_name.strip():
+        st.error("Please enter an owner name.")
+    elif not st.session_state.owner.pets:
+        st.error("Please add at least one pet before generating a schedule.")
     elif not all_tasks:
         st.error("Please add at least one task before generating a schedule.")
     else:
@@ -232,18 +264,19 @@ if st.button("Generate schedule"):
         st.session_state.conflict_rows = conflict_rows
 
         st.success("Schedule generated successfully.")
-        if st.session_state.schedule_rows:
-            st.markdown("### Today's Schedule")
-            st.caption("Tasks are automatically sorted by priority and due time.")
-            st.table(st.session_state.schedule_rows)
 
-            st.markdown("### Why this plan was chosen")
-            for explanation in st.session_state.plan_explanations:
-                st.write(explanation)
+if st.session_state.schedule_rows:
+    st.markdown("### Today's Schedule")
+    st.caption("Tasks are automatically sorted by priority and due time.")
+    st.table(st.session_state.schedule_rows)
 
-            if st.session_state.conflict_rows:
-                st.markdown("### Scheduling Conflicts")
-                st.warning("⚠️ Scheduling conflict detected. Multiple tasks are scheduled at the same time.")
-                st.table(st.session_state.conflict_rows)
-            else:
-                st.info("No scheduling conflicts detected.")
+    st.markdown("### Why this plan was chosen")
+    for explanation in st.session_state.plan_explanations:
+        st.write(explanation)
+
+    if st.session_state.conflict_rows:
+        st.markdown("### Scheduling Conflicts")
+        st.warning("⚠️ Scheduling conflict detected. Multiple tasks are scheduled at the same time.")
+        st.table(st.session_state.conflict_rows)
+    else:
+        st.info("No scheduling conflicts detected.")
