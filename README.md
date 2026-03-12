@@ -59,8 +59,14 @@ You can run the automated tests with:
 
 ```bash
 python -m pytest
+```
 
-The current test suite verifies core behaviors in the PawPal+ system, including task completion, task addition, chronological sorting, recurring task creation, and conflict detection.
+The current test suite verifies core behaviors in the PawPal+ system, including:
+	•	task completion
+	•	task addition
+	•	chronological sorting
+	•	recurring task creation
+	•	conflict detection
 
 Confidence Level: ★★★★☆ (4/5)
 
