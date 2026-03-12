@@ -52,3 +52,16 @@ PawPal+ now includes several simple algorithms to help organize pet care tasks:
 - **Conflict Detection:** The scheduler detects tasks scheduled at the same time and returns a warning message.
 
 These features help the system produce a more useful and intelligent daily care plan for the pet owner.
+
+## Testing PawPal+
+
+You can run the automated tests with:
+
+```bash
+python -m pytest
+
+The current test suite verifies core behaviors in the PawPal+ system, including task completion, task addition, chronological sorting, recurring task creation, and conflict detection.
+
+Confidence Level: ★★★★☆ (4/5)
+
+I am confident that the core scheduling logic works correctly for the main happy paths and key edge cases covered by the tests. If I had more time, I would add more tests for empty schedules, overlapping durations, and weekly recurrence edge cases.
