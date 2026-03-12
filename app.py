@@ -5,6 +5,29 @@ from pawpal_system import Owner, Pet, Task, Scheduler
 DATA_FILE = "data.json"
 
 
+def suggest_tasks_for_species(species: str):
+    """Return suggested tasks based on pet species."""
+    suggestions = {
+        "dog": [
+            ("Morning Walk", 30, "high", "08:00", "daily"),
+            ("Feed Breakfast", 10, "high", "07:30", "daily"),
+            ("Play Time", 20, "medium", "18:00", "daily"),
+            ("Grooming", 40, "medium", "17:00", "weekly"),
+        ],
+        "cat": [
+            ("Feed Meal", 10, "high", "08:00", "daily"),
+            ("Clean Litter Box", 10, "high", "09:00", "daily"),
+            ("Play Session", 15, "medium", "19:00", "daily"),
+            ("Brush Fur", 20, "low", "17:00", "weekly"),
+        ],
+        "other": [
+            ("Feed Pet", 10, "high", "08:00", "daily"),
+            ("Clean Habitat", 20, "medium", "18:00", "weekly"),
+        ],
+    }
+    return suggestions.get(species, [])
+
+
 def save_owner_data() -> None:
     """Persist the current owner state to JSON."""
     if "owner" in st.session_state:
@@ -57,18 +80,18 @@ if "owner" not in st.session_state:
 # Initialize counters from loaded data
 if "pet_counter" not in st.session_state:
     if st.session_state.owner.pets:
-        st.session_state.pet_counter = max(
-            pet.pet_id for pet in st.session_state.owner.pets
-        ) + 1
+        st.session_state.pet_counter = (
+            max(pet.pet_id for pet in st.session_state.owner.pets) + 1
+        )
     else:
         st.session_state.pet_counter = 1
 
 if "task_counter" not in st.session_state:
     all_existing_tasks = st.session_state.owner.get_all_tasks()
     if all_existing_tasks:
-        st.session_state.task_counter = max(
-            task.task_id for task in all_existing_tasks
-        ) + 1
+        st.session_state.task_counter = (
+            max(task.task_id for task in all_existing_tasks) + 1
+        )
     else:
         st.session_state.task_counter = 1
 
@@ -122,6 +145,36 @@ if st.session_state.owner.pets:
     st.caption(
         f"Selected pet: {selected_pet.name} ({selected_pet.species}, age {selected_pet.age})"
     )
+
+    st.markdown("### Suggested Tasks")
+    suggested_tasks = suggest_tasks_for_species(selected_pet.species)
+
+    for i, suggestion in enumerate(suggested_tasks):
+        title, suggested_duration, suggested_priority_label, suggested_due_time, suggested_frequency = suggestion
+
+        if st.button(
+            f"➕ Add suggested task: {title}",
+            key=f"suggest_{selected_pet.name}_{i}_{title}",
+        ):
+            priority_map = {"low": 1, "medium": 2, "high": 3}
+
+            task = Task(
+                task_id=st.session_state.task_counter,
+                pet=selected_pet,
+                task_type=title,
+                duration=suggested_duration,
+                priority=priority_map[suggested_priority_label],
+                due_date=date.today(),
+                due_time=suggested_due_time,
+                frequency=suggested_frequency,
+            )
+
+            st.session_state.owner.add_task(task)
+            st.session_state.task_counter += 1
+            save_owner_data()
+
+            st.success(f"Suggested task added: {title}")
+            st.rerun()
 else:
     selected_pet = None
     st.info("No pets added yet. Add a pet first.")
@@ -171,7 +224,7 @@ if st.button("Add task"):
         st.success(f"Added task: {task_title} for {selected_pet.name}")
         st.rerun()
 
-current_tasks = st.session_state.owner.get_all_tasks()
+current_tasks = Scheduler(st.session_state.owner.get_all_tasks()).sort_tasks_by_time()
 
 if current_tasks:
     st.write("Current tasks:")
@@ -182,7 +235,7 @@ if current_tasks:
         with col1:
             st.write(
                 f"{task.task_type} | {task.pet.name} | {task.duration} min | "
-                f"Priority {task.priority} | {task.due_time} | {task.frequency}"
+                f"Priority {task.priority} | {task.due_date} {task.due_time} | {task.frequency}"
             )
 
         with col2:
@@ -234,6 +287,7 @@ if st.button("Generate schedule"):
         for position, task in enumerate(daily_plan, start=1):
             schedule_rows.append(
                 {
+                    "Date": task.due_date,
                     "Time": task.due_time,
                     "Pet": task.pet.name,
                     "Task": task.task_type,
@@ -245,14 +299,15 @@ if st.button("Generate schedule"):
             )
 
             plan_explanations.append(
-                f"{position}. {task.task_type} for {task.pet.name} is scheduled at "
-                f"{task.due_time} because it has priority {task.priority}."
+                f"{position}. {task.task_type} for {task.pet.name} is scheduled on "
+                f"{task.due_date} at {task.due_time} because it has priority {task.priority}."
             )
 
         conflict_rows = []
         for task in conflicts:
             conflict_rows.append(
                 {
+                    "Date": task.due_date,
                     "Time": task.due_time,
                     "Pet": task.pet.name,
                     "Task": task.task_type,
@@ -267,7 +322,7 @@ if st.button("Generate schedule"):
 
 if st.session_state.schedule_rows:
     st.markdown("### Today's Schedule")
-    st.caption("Tasks are automatically sorted by priority and due time.")
+    st.caption("Tasks are automatically sorted by priority, date, and due time.")
     st.table(st.session_state.schedule_rows)
 
     st.markdown("### Why this plan was chosen")
@@ -276,7 +331,7 @@ if st.session_state.schedule_rows:
 
     if st.session_state.conflict_rows:
         st.markdown("### Scheduling Conflicts")
-        st.warning("⚠️ Scheduling conflict detected. Multiple tasks are scheduled at the same time.")
+        st.warning("⚠️ Scheduling conflict detected. Multiple tasks are scheduled at the same date and time.")
         st.table(st.session_state.conflict_rows)
     else:
         st.info("No scheduling conflicts detected.")

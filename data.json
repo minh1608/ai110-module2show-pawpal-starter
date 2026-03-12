@@ -17,6 +17,16 @@
           "due_time": "08:00",
           "frequency": "daily",
           "completed": false
+        },
+        {
+          "task_id": 4,
+          "task_type": "Feed Breakfast",
+          "duration": 10,
+          "priority": 3,
+          "due_date": "2026-03-12",
+          "due_time": "07:30",
+          "frequency": "daily",
+          "completed": false
         }
       ]
     },
@@ -52,6 +62,34 @@
           "due_date": "2026-03-12",
           "due_time": "08:00",
           "frequency": "daily",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "pet_id": 4,
+      "name": "Lucky",
+      "species": "cat",
+      "age": 4,
+      "tasks": [
+        {
+          "task_id": 5,
+          "task_type": "Clean Litter Box",
+          "duration": 10,
+          "priority": 3,
+          "due_date": "2026-03-12",
+          "due_time": "09:00",
+          "frequency": "daily",
+          "completed": false
+        },
+        {
+          "task_id": 6,
+          "task_type": "Brush Fur",
+          "duration": 20,
+          "priority": 1,
+          "due_date": "2026-03-12",
+          "due_time": "17:00",
+          "frequency": "weekly",
           "completed": false
         }
       ]

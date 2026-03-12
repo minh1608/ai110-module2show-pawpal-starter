@@ -59,6 +59,17 @@ PawPal+ now includes several simple algorithms to help organize pet care tasks:
 
 These features help the system produce a more useful and intelligent daily care plan for the pet owner.
 
+## AI Task Suggestions
+
+PawPal+ now includes a simple AI-inspired task suggestion feature.
+
+When a user selects a pet, the system automatically recommends common care tasks based on the pet’s species. For example:
+
+- Dogs may receive suggestions such as **Morning Walk**, **Feed Breakfast**, or **Play Time**.
+- Cats may receive suggestions like **Clean Litter Box**, **Feed Meal**, or **Play Session**.
+
+These suggestions help the owner quickly add typical care activities without manually entering every task. Suggested tasks can be added with a single click and are immediately integrated into the scheduling system.
+
 ## Features
 
 PawPal+ includes several intelligent scheduling features designed to help pet owners manage daily care tasks effectively:
